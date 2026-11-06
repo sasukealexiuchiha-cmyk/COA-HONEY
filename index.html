@@ -2,735 +2,301 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cooperativa de Ahorro y Crédito Educadores de Honduras Limitada</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>¿Phishing o legítimo? Test de detección</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #333; background: #fff; }
-  a { text-decoration: none; color: inherit; }
+  :root{
+    --bg:#eef2f6; --surface:#ffffff; --ink:#1b2a38; --muted:#5b6b7b;
+    --line:#d3dbe4; --accent:#1f5f8b; --ok:#1d7a4a; --bad:#b3261e;
+    --ok-bg:#e6f4ec; --bad-bg:#fbeae9;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#121a22; --surface:#1b2631; --ink:#e7edf3; --muted:#9aabbb;
+      --line:#2e3c4a; --accent:#6bb3e0; --ok:#5cc58b; --bad:#ff8a80;
+      --ok-bg:#16342500; --bad-bg:#3a1b1a;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:"Segoe UI",system-ui,-apple-system,sans-serif;line-height:1.5}
+  main{max-width:760px;margin:0 auto;padding:24px 16px 64px}
+  h1{font-size:1.6rem;margin:8px 0 4px}
+  .sub{color:var(--muted);margin:0 0 20px}
+  .bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-bottom:6px}
+  .bar>i{display:block;height:100%;width:0;background:var(--accent);transition:width .3s}
+  .count{font-size:.85rem;color:var(--muted);margin-bottom:16px}
 
-  /* ── TOP BAR ── */
-  .top-bar {
-    background: #e8710a;
-    color: #fff;
-    font-size: 12px;
-    padding: 5px 20px;
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 18px;
-  }
-  .top-bar a { color: #fff; display: flex; align-items: center; gap: 5px; }
-  .top-bar a:hover { text-decoration: underline; }
-  .top-bar svg { width: 14px; height: 14px; fill: currentColor; }
+  .mail{background:var(--surface);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .mail-head{padding:14px 18px;border-bottom:1px solid var(--line);font-size:.92rem}
+  .mail-head div{margin:2px 0}
+  .mail-head b{display:inline-block;width:70px;color:var(--muted);font-weight:500}
+  .mail-head .subject{font-size:1.05rem;font-weight:600;margin-bottom:8px}
+  .mail-body{padding:18px;font-size:.96rem}
+  .mail-body p{margin:0 0 12px}
+  .btn-fake{display:inline-block;padding:9px 18px;background:var(--accent);color:#fff;
+    border-radius:4px;text-decoration:none;cursor:pointer;border:0;font:inherit}
+  .hint{font-size:.8rem;color:var(--muted);margin-top:6px}
+  #linkbar{position:sticky;bottom:0;margin-top:10px;font-size:.82rem;color:var(--muted);
+    background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 10px;min-height:32px}
 
-  /* ── HEADER ── */
-  header {
-    background: #fff;
-    border-bottom: 3px solid #e8710a;
-    padding: 10px 30px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky; top: 0; z-index: 1000;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-  }
-  .logo-area { display: flex; align-items: center; gap: 14px; }
-  .logo-circle {
-    width: 70px; height: 70px; border-radius: 50%;
-    background: #e8710a;
-    display: flex; align-items: center; justify-content: center;
-    color: #fff; font-size: 10px; font-weight: bold; text-align: center;
-    line-height: 1.2; padding: 6px;
-    flex-shrink: 0;
-  }
-  .logo-text { line-height: 1.3; }
-  .logo-text .name { font-size: 13px; font-weight: bold; color: #e8710a; max-width: 260px; }
-  .logo-text .slogan { font-size: 11px; color: #666; }
+  .choices{display:flex;gap:12px;margin:18px 0}
+  .choices button{flex:1;padding:14px;font:inherit;font-weight:600;border-radius:6px;
+    border:2px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+  .choices button:hover:not(:disabled){border-color:var(--accent)}
+  .choices button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+  .choices button:disabled{cursor:default;opacity:.7}
 
-  /* ── NAV ── */
-  nav { background: #e8710a; }
-  nav ul { list-style: none; display: flex; flex-wrap: wrap; margin: 0; padding: 0; justify-content: center; }
-  nav ul li { position: relative; }
-  nav ul li a {
-    display: block; color: #fff; padding: 12px 14px;
-    font-size: 13px; font-weight: bold; white-space: nowrap;
-    transition: background 0.2s;
-  }
-  nav ul li a:hover { background: #c45c00; }
-  nav ul li ul {
-    display: none; position: absolute; top: 100%; left: 0;
-    background: #c45c00; min-width: 200px; z-index: 999;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-  }
-  nav ul li:hover ul { display: block; }
-  nav ul li ul li a { font-size: 12px; font-weight: normal; padding: 10px 16px; border-bottom: 1px solid #d06800; }
-  nav ul li ul li a:hover { background: #e8710a; }
+  .feedback{border-radius:8px;padding:16px 18px;margin-bottom:16px;display:none}
+  .feedback.show{display:block}
+  .feedback.ok{background:var(--ok-bg);border:1px solid var(--ok)}
+  .feedback.bad{background:var(--bad-bg);border:1px solid var(--bad)}
+  .feedback h2{margin:0 0 6px;font-size:1.05rem}
+  .feedback ul{margin:8px 0 0;padding-left:20px}
+  .next{padding:11px 22px;font:inherit;font-weight:600;background:var(--accent);color:#fff;
+    border:0;border-radius:6px;cursor:pointer}
+  .next:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
 
-  /* ── HERO SLIDER ── */
-  .slider { position: relative; overflow: hidden; background: #e8710a; }
-  .slides { display: flex; transition: transform 0.5s ease; }
-  .slide {
-    min-width: 100%; height: 380px;
-    display: flex; align-items: center; justify-content: center;
-    position: relative; overflow: hidden;
-  }
-  .slide-bg {
-    position: absolute; inset: 0;
-    background-size: cover; background-position: center;
-  }
-  .slide-content {
-    position: relative; z-index: 2;
-    text-align: center; color: #fff;
-    padding: 20px;
-  }
-  .slide-content h2 { font-size: 32px; font-weight: bold; text-shadow: 2px 2px 6px rgba(0,0,0,0.6); margin-bottom: 10px; }
-  .slide-content p { font-size: 16px; text-shadow: 1px 1px 4px rgba(0,0,0,0.5); margin-bottom: 16px; }
-  .slide-btn {
-    display: inline-block; background: #fbbf24; color: #fff;
-    padding: 10px 28px; border-radius: 4px; font-weight: bold;
-    font-size: 14px; transition: background 0.2s;
-  }
-  .slide-btn:hover { background: #e8710a; }
-  .slider-dots {
-    position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
-    display: flex; gap: 8px; z-index: 10;
-  }
-  .dot {
-    width: 10px; height: 10px; border-radius: 50%;
-    background: rgba(255,255,255,0.5); cursor: pointer; transition: background 0.2s;
-  }
-  .dot.active { background: #fff; }
-  .slider-arrow {
-    position: absolute; top: 50%; transform: translateY(-50%);
-    background: rgba(0,0,0,0.35); color: #fff;
-    border: none; font-size: 22px; padding: 10px 14px;
-    cursor: pointer; z-index: 10; border-radius: 4px;
-    transition: background 0.2s;
-  }
-  .slider-arrow:hover { background: rgba(0,0,0,0.6); }
-  .arrow-left { left: 12px; }
-  .arrow-right { right: 12px; }
-
-  /* ── QUICK ACCESS ICONS ── */
-  .quick-access {
-    background: #fff7ee;
-    border-bottom: 2px solid #f5dcc0;
-    padding: 16px 30px;
-  }
-  .qa-grid {
-    display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;
-    max-width: 1100px; margin: 0 auto;
-  }
-  .qa-item {
-    background: #fff; border: 1px solid #f5dcc0; border-radius: 6px;
-    padding: 12px 18px; display: flex; align-items: center; gap: 10px;
-    font-size: 13px; font-weight: bold; color: #e8710a;
-    transition: all 0.2s; cursor: pointer; min-width: 160px; justify-content: center;
-  }
-  .qa-item:hover { background: #e8710a; color: #fff; border-color: #e8710a; }
-  .qa-item svg { width: 22px; height: 22px; flex-shrink: 0; }
-
-  /* ── MAIN CONTENT ── */
-  .main { max-width: 1100px; margin: 0 auto; padding: 30px 20px; }
-  .content-grid { display: grid; grid-template-columns: 1fr 300px; gap: 28px; }
-
-  /* ── CURRENCY BOX ── */
-  .currency-box {
-    background: #e8710a; color: #fff;
-    border-radius: 8px; padding: 18px 20px; margin-bottom: 20px;
-  }
-  .currency-box h3 { font-size: 14px; font-weight: bold; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
-  .currency-date { font-size: 11px; color: #f5c99a; margin-bottom: 8px; }
-  .currency-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.15); font-size: 13px; }
-  .currency-row:last-child { border-bottom: none; }
-  .currency-row .label { color: #fddcb5; }
-  .currency-row .val { font-weight: bold; font-size: 15px; }
-  .currency-divider { margin: 12px 0; border-top: 2px solid rgba(255,255,255,0.2); }
-
-  /* ── SIDEBAR CARDS ── */
-  .sidebar-card {
-    background: #fff; border: 1px solid #f5dcc0;
-    border-radius: 8px; overflow: hidden; margin-bottom: 16px;
-  }
-  .sidebar-card-header {
-    background: #e8710a; color: #fff;
-    padding: 10px 14px; font-size: 13px; font-weight: bold;
-  }
-  .sidebar-card-body { padding: 14px; }
-  .sidebar-card-body ul { list-style: none; padding: 0; }
-  .sidebar-card-body ul li {
-    padding: 6px 0; border-bottom: 1px solid #fff0e0;
-    font-size: 13px;
-  }
-  .sidebar-card-body ul li:last-child { border-bottom: none; }
-  .sidebar-card-body ul li a { color: #e8710a; }
-  .sidebar-card-body ul li a:hover { text-decoration: underline; }
-  .sidebar-card-body ul li::before { content: "› "; color: #fbbf24; font-weight: bold; }
-
-  /* ── INFO SECTIONS ── */
-  .info-section { margin-bottom: 28px; }
-  .section-title {
-    font-size: 18px; font-weight: bold; color: #e8710a;
-    border-left: 5px solid #fbbf24;
-    padding-left: 12px; margin-bottom: 16px;
-  }
-
-  .product-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
-  .product-card {
-    background: #fff; border: 1px solid #f5dcc0;
-    border-radius: 8px; padding: 20px; text-align: center;
-    transition: all 0.2s; cursor: pointer;
-  }
-  .product-card:hover { border-color: #e8710a; box-shadow: 0 4px 12px rgba(0,63,127,0.12); transform: translateY(-2px); }
-  .product-card .pc-icon {
-    width: 56px; height: 56px; border-radius: 50%;
-    background: #fff0e0; margin: 0 auto 12px;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .product-card .pc-icon svg { width: 28px; height: 28px; fill: #e8710a; }
-  .product-card h4 { font-size: 14px; font-weight: bold; color: #e8710a; margin-bottom: 6px; }
-  .product-card p { font-size: 12px; color: #666; line-height: 1.5; }
-  .product-card .pc-btn {
-    display: inline-block; margin-top: 12px;
-    background: #fbbf24; color: #fff;
-    padding: 7px 20px; border-radius: 4px;
-    font-size: 12px; font-weight: bold;
-    transition: background 0.2s;
-  }
-  .product-card .pc-btn:hover { background: #e8710a; }
-
-  /* ── NEWS ── */
-  .news-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
-  .news-card {
-    background: #fff; border: 1px solid #f5dcc0; border-radius: 8px; overflow: hidden;
-  }
-  .news-card-img {
-    height: 130px; background: #e8710a;
-    display: flex; align-items: center; justify-content: center;
-    overflow: hidden;
-  }
-  .news-placeholder {
-    width: 100%; height: 100%; background: linear-gradient(135deg, #e8710a 0%, #f08020 100%);
-    display: flex; align-items: center; justify-content: center;
-    color: rgba(255,255,255,0.3); font-size: 36px;
-  }
-  .news-card-body { padding: 14px; }
-  .news-card-body .news-date { font-size: 11px; color: #999; margin-bottom: 5px; }
-  .news-card-body h4 { font-size: 13px; font-weight: bold; color: #e8710a; margin-bottom: 6px; line-height: 1.4; }
-  .news-card-body p { font-size: 12px; color: #666; line-height: 1.5; }
-  .news-card-body .read-more { display: inline-block; margin-top: 8px; color: #fbbf24; font-size: 12px; font-weight: bold; }
-
-  /* ── EDUCATION BANNER ── */
-  .edu-banner {
-    background: #e8710a; color: #fff;
-    border-radius: 8px; padding: 22px 28px;
-    display: flex; align-items: center; gap: 20px;
-    margin-bottom: 28px;
-  }
-  .edu-icon { font-size: 44px; flex-shrink: 0; }
-  .edu-text h3 { font-size: 17px; font-weight: bold; margin-bottom: 6px; }
-  .edu-text p { font-size: 13px; color: #fddcb5; margin-bottom: 10px; }
-  .edu-btn {
-    display: inline-block; background: #fbbf24; color: #fff;
-    padding: 8px 22px; border-radius: 4px; font-weight: bold; font-size: 13px;
-  }
-
-  /* ── APP BANNER ── */
-  .app-banner {
-    background: #fff7ee; border: 1px solid #f5dcc0;
-    border-radius: 8px; padding: 22px 28px;
-    display: flex; align-items: center; gap: 20px;
-    margin-bottom: 28px;
-  }
-  .app-icon { font-size: 44px; flex-shrink: 0; }
-  .app-text h3 { font-size: 17px; font-weight: bold; color: #e8710a; margin-bottom: 6px; }
-  .app-text p { font-size: 13px; color: #555; margin-bottom: 10px; }
-  .app-btn {
-    display: inline-flex; align-items: center; gap: 8px;
-    background: #3d2200; color: #fff;
-    padding: 8px 18px; border-radius: 6px; font-size: 13px;
-  }
-
-  /* ── FOOTER ── */
-  footer { background: #c45c00; color: #fddcb5; margin-top: 40px; }
-  .footer-main {
-    max-width: 1100px; margin: 0 auto;
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 28px; padding: 36px 20px;
-  }
-  .footer-col h4 { font-size: 14px; font-weight: bold; color: #fff; margin-bottom: 14px; border-bottom: 2px solid #fbbf24; padding-bottom: 6px; }
-  .footer-col ul { list-style: none; }
-  .footer-col ul li { margin-bottom: 7px; }
-  .footer-col ul li a { color: #f5c99a; font-size: 12px; transition: color 0.2s; }
-  .footer-col ul li a:hover { color: #fff; }
-  .footer-col p { font-size: 12px; color: #f5c99a; line-height: 1.7; }
-  .footer-social { display: flex; gap: 10px; margin-top: 12px; }
-  .footer-social a {
-    width: 34px; height: 34px; border-radius: 50%;
-    background: rgba(255,255,255,0.1);
-    display: flex; align-items: center; justify-content: center;
-    color: #fff; font-size: 14px; transition: background 0.2s;
-  }
-  .footer-social a:hover { background: #fbbf24; }
-  .footer-bottom {
-    background: #7a3800; text-align: center;
-    padding: 14px 20px; font-size: 12px; color: #c45c00;
-  }
+  .result{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:24px;text-align:center}
+  .result .score{font-size:2.6rem;font-weight:700;margin:6px 0}
+  .review{text-align:left;margin-top:20px}
+  .review li{margin:6px 0}
+  .tag-ok{color:var(--ok);font-weight:600}.tag-bad{color:var(--bad);font-weight:600}
+  [hidden]{display:none!important}
 </style>
 </head>
 <body>
+<main>
+  <h1>¿Phishing o legítimo?</h1>
+  <p class="sub">Revisa cada mensaje y decide. Pasa el cursor sobre los enlaces para ver su destino real.</p>
 
-<!-- TOP BAR -->
-<div class="top-bar">
-  <a href="https://enlinea.coacehl.com/Administration.WebUI/Pages/General/Login.aspx" target="_blank">
-    <svg viewBox="0 0 24 24"><path d="M12 2a5 5 0 1 1 0 10A5 5 0 0 1 12 2zm0 12c5.33 0 8 2.67 8 4v2H4v-2c0-1.33 2.67-4 8-4z"/></svg>
-    COACEHL en Línea
-  </a>
-  <a href="https://www.cedefoes.coop/" target="_blank">
-    <svg viewBox="0 0 24 24"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zm-8 10.55V17l8 4 8-4v-3.45L12 18l-8-4.45z"/></svg>
-    CEDEFOES
-  </a>
-  <a href="https://www.coacehl.com/call-center/">
-    <svg viewBox="0 0 24 24"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C11.6 21 3 12.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.3 1L6.6 10.8z"/></svg>
-    Call Center
-  </a>
-</div>
+  <div id="quiz">
+    <div class="bar"><i id="progress"></i></div>
+    <div class="count" id="count"></div>
 
-<!-- HEADER -->
-<header>
-  <div class="logo-area">
-    <div class="logo-circle">COACEHL</div>
-    <div class="logo-text">
-      <div class="name">Cooperativa de Ahorro y Crédito<br>Educadores de Honduras Limitada</div>
-      <div class="slogan">Juntos somos más fuertes</div>
+    <article class="mail" aria-live="polite">
+      <div class="mail-head">
+        <div class="subject" id="m-subject"></div>
+        <div><b>De:</b> <span id="m-from"></span></div>
+        <div><b>Para:</b> <span id="m-to"></span></div>
+      </div>
+      <div class="mail-body" id="m-body"></div>
+    </article>
+    <div id="linkbar" aria-live="polite">Pasa el cursor sobre un enlace o botón para ver su destino.</div>
+
+    <div class="choices">
+      <button id="btn-phish">Es phishing</button>
+      <button id="btn-legit">Es legítimo</button>
     </div>
+
+    <div class="feedback" id="feedback" role="status"></div>
+    <button class="next" id="next" hidden>Siguiente</button>
   </div>
-  <div style="display:flex; align-items:center; gap:12px;">
-    <a href="https://enlinea.coacehl.com/Administration.WebUI/Pages/General/Login.aspx" target="_blank"
-       style="background:#e8710a; color:#fff; padding:9px 18px; border-radius:5px; font-size:13px; font-weight:bold; display:flex; align-items:center; gap:6px;">
-      <svg style="width:16px;height:16px;fill:#fff" viewBox="0 0 24 24"><path d="M12 2a5 5 0 1 1 0 10A5 5 0 0 1 12 2zm0 12c5.33 0 8 2.67 8 4v2H4v-2c0-1.33 2.67-4 8-4z"/></svg>
-      Ingresar
-    </a>
-  </div>
-</header>
 
-<!-- NAV -->
-<nav>
-  <ul>
-    <li><a href="#">Inicio</a></li>
-    <li>
-      <a href="#">Nuestra Cooperativa ▾</a>
-      <ul>
-        <li><a href="#">¿Quiénes Somos?</a></li>
-        <li><a href="#">Principios y Valores</a></li>
-        <li><a href="#">Autoridades</a></li>
-        <li><a href="#">Memorias Anuales</a></li>
-        <li><a href="#">Alianzas</a></li>
-        <li><a href="#">Información Financiera</a></li>
-        <li><a href="#">Leyes y Estatutos</a></li>
-        <li><a href="#">Afiliación</a></li>
-      </ul>
-    </li>
-    <li><a href="#">Beneficios</a></li>
-    <li>
-      <a href="#">Ahorro</a>
-    </li>
-    <li>
-      <a href="#">Crédito ▾</a>
-      <ul>
-        <li><a href="#">Simulador de Créditos</a></li>
-      </ul>
-    </li>
-    <li>
-      <a href="#">RSCOOP y Educación ▾</a>
-      <ul>
-        <li><a href="#">Balance Social</a></li>
-      </ul>
-    </li>
-    <li>
-      <a href="#">Contáctanos ▾</a>
-      <ul>
-        <li><a href="#">Filiales</a></li>
-      </ul>
-    </li>
-    <li><a href="#">COACEHL en Línea</a></li>
-    <li><a href="#">CEDEFOES</a></li>
-  </ul>
-</nav>
-
-<!-- SLIDER -->
-<div class="slider" id="slider">
-  <div class="slides" id="slides">
-
-    <div class="slide">
-      <div class="slide-bg" style="background: linear-gradient(135deg, #7a3800 0%, #e8710a 50%, #f08020 100%);"></div>
-      <div class="slide-content">
-        <h2>Campaña de Mercadeo 2026</h2>
-        <p>Conoce nuestros lineamientos y beneficios para este año</p>
-        <a href="#" class="slide-btn">Ver Más</a>
-      </div>
-    </div>
-
-    <div class="slide">
-      <div class="slide-bg" style="background: linear-gradient(135deg, #c45c00 0%, #f08020 100%);"></div>
-      <div class="slide-content">
-        <h2>COACEHL en Línea</h2>
-        <p>Accede a tus servicios cooperativos desde cualquier lugar</p>
-        <a href="https://enlinea.coacehl.com/Administration.WebUI/Pages/General/Login.aspx" class="slide-btn">Ingresar Ahora</a>
-      </div>
-    </div>
-
-    <div class="slide">
-      <div class="slide-bg" style="background: linear-gradient(135deg, #5c2800 0%, #d06800 100%);"></div>
-      <div class="slide-content">
-        <h2>Créditos para Educadores</h2>
-        <p>Tasas preferenciales y condiciones especiales para todos nuestros afiliados</p>
-        <a href="#" class="slide-btn">Solicitar Crédito</a>
-      </div>
-    </div>
-
-    <div class="slide">
-      <div class="slide-bg" style="background: linear-gradient(135deg, #7a3800 0%, #e07010 100%);"></div>
-      <div class="slide-content">
-        <h2>Planes de Ahorro</h2>
-        <p>Tu futuro empieza hoy con nuestros productos de ahorro</p>
-        <a href="#" class="slide-btn">Conocer Más</a>
-      </div>
-    </div>
-
-  </div>
-  <button class="slider-arrow arrow-left" onclick="changeSlide(-1)">&#10094;</button>
-  <button class="slider-arrow arrow-right" onclick="changeSlide(1)">&#10095;</button>
-  <div class="slider-dots" id="dots"></div>
-</div>
-
-<!-- QUICK ACCESS -->
-<div class="quick-access">
-  <div class="qa-grid">
-    <a href="https://enlinea.coacehl.com/Administration.WebUI/Pages/General/Login.aspx" class="qa-item" target="_blank">
-      <svg viewBox="0 0 24 24" fill="#e8710a"><path d="M12 2a5 5 0 1 1 0 10A5 5 0 0 1 12 2zm0 12c5.33 0 8 2.67 8 4v2H4v-2c0-1.33 2.67-4 8-4z"/></svg>
-      COACEHL en Línea
-    </a>
-    <a href="#" class="qa-item">
-      <svg viewBox="0 0 24 24" fill="#e8710a"><path d="M12 1L3 5v6c0 5.25 3.75 10.15 9 11.35C17.25 21.15 21 16.25 21 11V5l-9-4zm-1 14l-3-3 1.41-1.41L11 12.17l4.59-4.58L17 9l-6 6z"/></svg>
-      Simulador de Crédito
-    </a>
-    <a href="#" class="qa-item">
-      <svg viewBox="0 0 24 24" fill="#e8710a"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
-      Ahorro
-    </a>
-    <a href="#" class="qa-item">
-      <svg viewBox="0 0 24 24" fill="#e8710a"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>
-      Crédito
-    </a>
-    <a href="#" class="qa-item">
-      <svg viewBox="0 0 24 24" fill="#e8710a"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
-      Puntos de Atención
-    </a>
-    <a href="#" class="qa-item">
-      <svg viewBox="0 0 24 24" fill="#e8710a"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.32.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
-      Call Center
-    </a>
-    <a href="https://whistleblowersoftware.com/secure/CanaldeDenunciasCoacehl" class="qa-item" target="_blank">
-      <svg viewBox="0 0 24 24" fill="#e8710a"><path d="M12 1L3 5v6c0 5.25 3.75 10.15 9 11.35C17.25 21.15 21 16.25 21 11V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
-      Línea Ética
-    </a>
-    <a href="#" class="qa-item">
-      <svg viewBox="0 0 24 24" fill="#e8710a"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
-      Noticias
-    </a>
-  </div>
-</div>
-
-<!-- MAIN CONTENT -->
-<div class="main">
-  <div class="content-grid">
-
-    <!-- LEFT COLUMN -->
-    <div>
-
-      <!-- TIPO DE CAMBIO MÓVIL (solo en pantallas pequeñas se muestra aquí) -->
-
-      <!-- PRODUCTOS -->
-      <div class="info-section">
-        <h2 class="section-title">Nuestros Productos</h2>
-        <div class="product-cards">
-          <div class="product-card">
-            <div class="pc-icon">
-              <svg viewBox="0 0 24 24"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>
-            </div>
-            <h4>Ahorro</h4>
-            <p>Planes de ahorro con tasas competitivas diseñadas para educadores hondureños.</p>
-            <a href="#" class="pc-btn">Ver Más</a>
-          </div>
-          <div class="product-card">
-            <div class="pc-icon">
-              <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
-            </div>
-            <h4>Crédito</h4>
-            <p>Préstamos con condiciones especiales y tasas preferenciales para afiliados.</p>
-            <a href="#" class="pc-btn">Solicitar</a>
-          </div>
-          <div class="product-card">
-            <div class="pc-icon">
-              <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.25 3.75 10.15 9 11.35C17.25 21.15 21 16.25 21 11V5l-9-4zm-1 14l-3-3 1.41-1.41L11 12.17l4.59-4.58L17 9l-6 6z"/></svg>
-            </div>
-            <h4>Beneficios</h4>
-            <p>Portafolio completo de beneficios exclusivos para todos nuestros cooperativistas.</p>
-            <a href="#" class="pc-btn">Conocer</a>
-          </div>
-          <div class="product-card">
-            <div class="pc-icon">
-              <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
-            </div>
-            <h4>Simulador</h4>
-            <p>Calcula tu crédito en segundos con nuestra herramienta en línea.</p>
-            <a href="#" class="pc-btn">Simular</a>
-          </div>
-        </div>
-      </div>
-
-      <!-- EDUCACIÓN FINANCIERA BANNER -->
-      <div class="edu-banner">
-        <div class="edu-icon">🐷</div>
-        <div class="edu-text">
-          <h3>Educación Financiera</h3>
-          <p>Aprende a manejar tus finanzas personales con nuestras cápsulas educativas. Ingresa y descubre contenido valioso para ti y tu familia.</p>
-          <a href="#" class="edu-btn">Ver Más</a>
-        </div>
-      </div>
-
-      <!-- NOTICIAS -->
-      <div class="info-section">
-        <h2 class="section-title">Noticias COACEHL</h2>
-        <div class="news-grid">
-          <div class="news-card">
-            <div class="news-card-img">
-              <div class="news-placeholder">📰</div>
-            </div>
-            <div class="news-card-body">
-              <p class="news-date">Junio 2026</p>
-              <h4>Asamblea General Ordinaria 2026</h4>
-              <p>Resultados y acuerdos de la asamblea anual de cooperativistas.</p>
-              <a href="#" class="read-more">Leer más →</a>
-            </div>
-          </div>
-          <div class="news-card">
-            <div class="news-card-img">
-              <div class="news-placeholder">🎓</div>
-            </div>
-            <div class="news-card-body">
-              <p class="news-date">Mayo 2026</p>
-              <h4>Nuevos beneficios para afiliados 2026</h4>
-              <p>Ampliamos el portafolio de beneficios para todos nuestros miembros.</p>
-              <a href="#" class="read-more">Leer más →</a>
-            </div>
-          </div>
-          <div class="news-card">
-            <div class="news-card-img">
-              <div class="news-placeholder">💰</div>
-            </div>
-            <div class="news-card-body">
-              <p class="news-date">Abril 2026</p>
-              <h4>Programa de Solidez Financiera</h4>
-              <p>Conoce cómo COACEHL mantiene su solidez y transparencia para ti.</p>
-              <a href="#" class="read-more">Leer más →</a>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- APP BANNER -->
-      <div class="app-banner">
-        <div class="app-icon">📱</div>
-        <div class="app-text">
-          <h3>Lleva COACEHL en tu celular</h3>
-          <p>Descarga nuestra aplicación oficial y accede a todos los servicios desde tu smartphone.</p>
-          <a href="https://play.google.com/store/apps/details?id=com.app.appcoacehl&hl=es" target="_blank" class="app-btn">
-            ▶ Descargar en Google Play
-          </a>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- RIGHT SIDEBAR -->
-    <div>
-
-      <!-- TIPO DE CAMBIO -->
-      <div class="currency-box">
-        <h3>💵 El Cambio del Dólar</h3>
-        <p class="currency-date">12 de junio de 2026</p>
-        <div class="currency-row">
-          <span class="label">Compra:</span>
-          <span class="val">L 26.6470</span>
-        </div>
-        <div class="currency-row">
-          <span class="label">Venta:</span>
-          <span class="val">L 26.7802</span>
-        </div>
-        <div class="currency-divider"></div>
-        <h3>💶 El Cambio del Euro</h3>
-        <p class="currency-date">12 de junio de 2026</p>
-        <div class="currency-row">
-          <span class="label">Compra:</span>
-          <span class="val">L 29.3378</span>
-        </div>
-        <div class="currency-row">
-          <span class="label">Venta:</span>
-          <span class="val">L 33.6355</span>
-        </div>
-      </div>
-
-      <!-- NUESTRA COOPERATIVA -->
-      <div class="sidebar-card">
-        <div class="sidebar-card-header">Nuestra Cooperativa</div>
-        <div class="sidebar-card-body">
-          <ul>
-            <li><a href="#">¿Quiénes Somos?</a></li>
-            <li><a href="#">Principios y Valores Cooperativos</a></li>
-            <li><a href="#">Autoridades</a></li>
-            <li><a href="#">Memorias Anuales</a></li>
-            <li><a href="#">Alianzas</a></li>
-            <li><a href="#">Información Financiera</a></li>
-            <li><a href="#">Leyes y Estatutos</a></li>
-            <li><a href="#">Afiliación</a></li>
-            <li><a href="#">Activos Eventuales</a></li>
-          </ul>
-        </div>
-      </div>
-
-      <!-- RESPONSABILIDAD SOCIAL -->
-      <div class="sidebar-card">
-        <div class="sidebar-card-header">Responsabilidad Social</div>
-        <div class="sidebar-card-body">
-          <ul>
-            <li><a href="#">Balance Social</a></li>
-            <li><a href="#">Compromiso con los Afiliados</a></li>
-            <li><a href="#">Compromiso con la Comunidad</a></li>
-            <li><a href="#">Compromiso Ambiental</a></li>
-          </ul>
-        </div>
-      </div>
-
-      <!-- USUARIO COOPERATIVISTA -->
-      <div class="sidebar-card">
-        <div class="sidebar-card-header">Usuario Cooperativista</div>
-        <div class="sidebar-card-body">
-          <ul>
-            <li><a href="#">Educación Financiera</a></li>
-            <li><a href="#">Tarifario y Contratos</a></li>
-            <li><a href="#">Reclamos del Usuario</a></li>
-          </ul>
-        </div>
-      </div>
-
-      <!-- LINKS ESPECIALES -->
-      <div class="sidebar-card">
-        <div class="sidebar-card-header">Accesos Directos</div>
-        <div class="sidebar-card-body">
-          <ul>
-            <li><a href="https://whistleblowersoftware.com/secure/CanaldeDenunciasCoacehl" target="_blank">Línea Ética / Canal de Denuncias</a></li>
-            <li><a href="#" target="_blank">Solidez Financiera</a></li>
-            <li><a href="#" target="_blank">Filiales y Puntos de Atención</a></li>
-            <li><a href="https://www.youtube.com/@cooperativacoacehlHN" target="_blank">Canal de YouTube</a></li>
-          </ul>
-        </div>
-      </div>
-
-    </div>
-  </div>
-</div>
-
-<!-- FOOTER -->
-<footer>
-  <div class="footer-main">
-    <div class="footer-col">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
-        <div style="width:50px;height:50px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:bold;color:#e8710a;text-align:center;padding:4px;flex-shrink:0;">COACEHL</div>
-        <span style="font-size:13px;color:#fddcb5;line-height:1.3;">Cooperativa de Ahorro y Crédito Educadores de Honduras</span>
-      </div>
-      <p>Comprometidos con el bienestar financiero y social de los educadores hondureños desde nuestra fundación.</p>
-      <div class="footer-social" style="margin-top:14px;">
-        <a href="https://www.facebook.com/COACEHL" target="_blank" title="Facebook">f</a>
-        <a href="https://www.instagram.com/coacehl/" target="_blank" title="Instagram">in</a>
-        <a href="https://www.youtube.com/@cooperativacoacehlHN" target="_blank" title="YouTube">▶</a>
-        <a href="#" title="Call Center">☎</a>
-      </div>
-    </div>
-    <div class="footer-col">
-      <h4>Nuestra Cooperativa</h4>
-      <ul>
-        <li><a href="#">¿Quiénes Somos?</a></li>
-        <li><a href="#">Principios y Valores</a></li>
-        <li><a href="#">Autoridades</a></li>
-        <li><a href="#">Memorias Anuales</a></li>
-        <li><a href="#">Alianzas</a></li>
-        <li><a href="#">Afiliación</a></li>
-      </ul>
-    </div>
-    <div class="footer-col">
-      <h4>Productos</h4>
-      <ul>
-        <li><a href="#">Ahorro</a></li>
-        <li><a href="#">Crédito</a></li>
-        <li><a href="#">Simulador de Créditos</a></li>
-        <li><a href="#">Beneficios</a></li>
-        <li><a href="#">Portafolio de Beneficios</a></li>
-      </ul>
-    </div>
-    <div class="footer-col">
-      <h4>Responsabilidad Social</h4>
-      <ul>
-        <li><a href="#">Balance Social</a></li>
-        <li><a href="#">Compromiso Afiliados</a></li>
-        <li><a href="#">Compromiso Comunidad</a></li>
-        <li><a href="#">Compromiso Ambiental</a></li>
-        <li><a href="#">RSCOOP y Educación</a></li>
-      </ul>
-    </div>
-    <div class="footer-col">
-      <h4>Contáctanos</h4>
-      <ul>
-        <li><a href="#">Filiales</a></li>
-        <li><a href="#">Puntos de Atención</a></li>
-        <li><a href="#">Call Center</a></li>
-        <li><a href="https://whistleblowersoftware.com/secure/CanaldeDenunciasCoacehl" target="_blank">Línea Ética</a></li>
-        <li><a href="https://www.cedefoes.coop/" target="_blank">CEDEFOES</a></li>
-      </ul>
-    </div>
-  </div>
-  <div class="footer-bottom">
-    Copyright &copy; 2026 Cooperativa COACEHL. Todos los derechos reservados. &nbsp;|&nbsp; Honduras
-  </div>
-</footer>
+  <div class="result" id="result" hidden></div>
+</main>
 
 <script>
-  let current = 0;
-  const slides = document.getElementById('slides');
-  const total = document.querySelectorAll('.slide').length;
-  const dotsContainer = document.getElementById('dots');
-
-  for (let i = 0; i < total; i++) {
-    const d = document.createElement('div');
-    d.className = 'dot' + (i === 0 ? ' active' : '');
-    d.onclick = () => goTo(i);
-    dotsContainer.appendChild(d);
+/* ---------- Banco de preguntas (editable) ----------
+   body: HTML del correo. Usa data-url en <a> para mostrar el destino real.
+   phishing: true/false. clues: pistas que explican la respuesta. */
+const QUESTIONS = [
+  {
+    subject: "Tu cuenta será suspendida en 24 horas",
+    from: "Soporte <soporte@micuenta-seguridad.co>",
+    to: "tú@correo.com",
+    body: `<p>Estimado cliente:</p>
+      <p>Detectamos actividad inusual. Si no verifica su identidad hoy, su cuenta será cancelada de forma permanente.</p>
+      <p><a class="btn-fake" data-url="http://micuenta-seguridad.co/verificar?id=88213">Verificar ahora</a></p>
+      <p class="hint">Equipo de Seguridad</p>`,
+    phishing: true,
+    clues: [
+      "Crea urgencia y amenaza con consecuencias inmediatas.",
+      "Saludo genérico («Estimado cliente») en lugar de tu nombre.",
+      "El dominio del remitente no pertenece a ninguna empresa conocida y el enlace usa http sin cifrado."
+    ]
+  },
+  {
+    subject: "Tu recibo de suscripción – octubre",
+    from: "Facturación <facturas@miservicio.com>",
+    to: "ana.lopez@correo.com",
+    body: `<p>Hola Ana:</p>
+      <p>Adjuntamos el recibo de tu suscripción de octubre por $9.99. No necesitas hacer nada; el cobro se hizo automáticamente a tu tarjeta terminada en 4821.</p>
+      <p>Puedes ver tu historial entrando por ti mismo a <b>miservicio.com</b> desde tu navegador.</p>
+      <p class="hint">Si no reconoces este cobro, responde a este correo o contacta soporte desde la app.</p>`,
+    phishing: false,
+    clues: [
+      "Te llama por tu nombre y da detalles verificables (monto, últimos 4 dígitos).",
+      "No te pide datos ni urge a hacer clic: te invita a entrar por tu cuenta.",
+      "No contiene enlaces sospechosos ni archivos ejecutables."
+    ]
+  },
+  {
+    subject: "Factura pendiente – abrir archivo adjunto",
+    from: "Contabilidad <contabilidad@proveedor-pagos.net>",
+    to: "tú@correo.com",
+    body: `<p>Buenos días,</p>
+      <p>Adjunto la factura vencida. Por favor ábrala y habilite el contenido para visualizarla correctamente.</p>
+      <p><a data-url="archivo local: Factura_8841.pdf.exe">📎 Factura_8841.pdf.exe</a></p>`,
+    phishing: true,
+    clues: [
+      "La extensión real es .exe: es un programa, no un PDF.",
+      "Pide «habilitar contenido», técnica típica para ejecutar código malicioso.",
+      "No esperabas esa factura ni conoces al remitente."
+    ]
+  },
+  {
+    subject: "Código de verificación para iniciar sesión",
+    from: "Seguridad <no-reply@accounts.miplataforma.com>",
+    to: "tú@correo.com",
+    body: `<p>Tu código de verificación es <b>482 193</b>.</p>
+      <p>Caduca en 10 minutos. Si acabas de intentar iniciar sesión, introduce el código en la pantalla donde lo solicitaste.</p>
+      <p class="hint">Si no fuiste tú, ignora este mensaje y cambia tu contraseña desde la app oficial. Nunca compartiremos este código por teléfono ni chat.</p>`,
+    phishing: false,
+    clues: [
+      "Coincide con una acción que acabas de realizar.",
+      "No incluye enlaces: el código se usa donde tú iniciaste el proceso.",
+      "Advierte no compartir el código con nadie."
+    ]
+  },
+  {
+    subject: "¡Ganaste un premio! Reclámalo antes de medianoche",
+    from: "Premios <promos@sorteo-global-ganador.xyz>",
+    to: "tú@correo.com",
+    body: `<p>¡Felicidades! Fuiste seleccionado entre millones de usuarios para recibir un smartphone gratis.</p>
+      <p>Solo paga el envío de $3.50 con tu tarjeta para recibirlo.</p>
+      <p><a class="btn-fake" data-url="https://sorteo-global-ganador.xyz/pago">Reclamar mi premio</a></p>`,
+    phishing: true,
+    clues: [
+      "Premio de un sorteo en el que nunca participaste.",
+      "Te pide datos de tarjeta para un supuesto «envío gratuito».",
+      "Dominio .xyz sin relación con ninguna marca real y fecha límite artificial."
+    ]
+  },
+  {
+    subject: "Aviso: cambio de contraseña solicitado",
+    from: "Seguridad <seguridad@tu-banco-online.com>",
+    to: "tú@correo.com",
+    body: `<p>Hola:</p>
+      <p>Alguien solicitó cambiar tu contraseña. Si fuiste tú, haz clic abajo en las próximas 2 horas.</p>
+      <p><a class="btn-fake" data-url="https://tu-banco-online.com.verificacion-segura.info/reset">Cambiar contraseña</a></p>
+      <p class="hint">Si no fuiste tú, ignora este correo.</p>`,
+    phishing: true,
+    clues: [
+      "El dominio real del enlace es verificacion-segura.info; «tu-banco-online.com» es solo un subdominio engañoso.",
+      "Lee el dominio de derecha a izquierda hasta la primera barra: ahí está el verdadero destino.",
+      "Aunque el texto parezca razonable, el enlace lleva a un sitio ajeno al banco."
+    ]
+  },
+  {
+    subject: "Reunión de equipo movida a las 3 p. m.",
+    from: "Carlos Méndez <carlos.mendez@tuempresa.com>",
+    to: "equipo@tuempresa.com",
+    body: `<p>Hola equipo:</p>
+      <p>Movemos la reunión semanal de hoy a las 3 p. m. por conflicto de agenda. La sala sigue siendo la misma y el calendario ya está actualizado.</p>
+      <p>Saludos,<br>Carlos</p>`,
+    phishing: false,
+    clues: [
+      "Remitente del dominio de tu propia empresa y tema cotidiano.",
+      "No pide datos, dinero ni hacer clic en nada.",
+      "Menciona el calendario compartido, que puedes verificar por tu cuenta."
+    ]
+  },
+  {
+    subject: "Urgente: transferencia necesaria hoy",
+    from: "Director General <director.general@tuempresa-corp.com>",
+    to: "tú@tuempresa.com",
+    body: `<p>Necesito que hagas una transferencia confidencial hoy mismo. Estoy en una reunión y no puedo hablar por teléfono.</p>
+      <p>Responde en cuanto leas esto y te envío los datos de la cuenta. No lo comentes con nadie.</p>`,
+    phishing: true,
+    clues: [
+      "Suplantación de un directivo con un dominio casi idéntico al real (tuempresa-corp.com).",
+      "Pide secreto y rapidez, y evita cualquier verificación por otro canal.",
+      "Las solicitudes de dinero inesperadas siempre se confirman por teléfono o en persona."
+    ]
   }
+];
 
-  function goTo(n) {
-    current = (n + total) % total;
-    slides.style.transform = 'translateX(-' + current * 100 + '%)';
-    document.querySelectorAll('.dot').forEach((d, i) => {
-      d.classList.toggle('active', i === current);
-    });
-  }
+/* ---------- Lógica ---------- */
+const $ = id => document.getElementById(id);
+let order, idx, answers;
 
-  function changeSlide(dir) { goTo(current + dir); }
+function shuffle(a){ a = a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
 
-  setInterval(() => changeSlide(1), 5000);
+function start(){
+  order = shuffle(QUESTIONS);
+  idx = 0; answers = [];
+  $("result").hidden = true; $("quiz").hidden = false;
+  show();
+}
+
+function show(){
+  const q = order[idx];
+  $("m-subject").textContent = q.subject;
+  $("m-from").textContent = q.from;
+  $("m-to").textContent = q.to;
+  $("m-body").innerHTML = q.body;
+  $("count").textContent = `Mensaje ${idx+1} de ${order.length}`;
+  $("progress").style.width = (idx/order.length*100) + "%";
+  $("feedback").className = "feedback"; $("feedback").innerHTML = "";
+  $("next").hidden = true;
+  $("btn-phish").disabled = $("btn-legit").disabled = false;
+  $("linkbar").textContent = "Pasa el cursor sobre un enlace o botón para ver su destino.";
+  // Enlaces: mostrar destino real, nunca navegar
+  $("m-body").querySelectorAll("[data-url]").forEach(a=>{
+    a.tabIndex = 0;
+    const showUrl = () => $("linkbar").textContent = "Destino: " + a.dataset.url;
+    a.addEventListener("mouseenter", showUrl);
+    a.addEventListener("focus", showUrl);
+    a.addEventListener("click", e => e.preventDefault());
+  });
+}
+
+function answer(saysPhishing){
+  const q = order[idx];
+  const correct = saysPhishing === q.phishing;
+  answers.push({q, correct});
+  $("btn-phish").disabled = $("btn-legit").disabled = true;
+  const fb = $("feedback");
+  fb.className = "feedback show " + (correct ? "ok" : "bad");
+  fb.innerHTML = `<h2>${correct ? "Correcto" : "Incorrecto"}: este mensaje ${q.phishing ? "es phishing" : "es legítimo"}.</h2>
+    <ul>${q.clues.map(c=>`<li>${c}</li>`).join("")}</ul>`;
+  const nx = $("next");
+  nx.hidden = false;
+  nx.textContent = idx === order.length-1 ? "Ver resultados" : "Siguiente";
+  nx.focus();
+}
+
+function next(){
+  idx++;
+  if(idx >= order.length) return finish();
+  show();
+}
+
+function finish(){
+  $("quiz").hidden = true;
+  const score = answers.filter(a=>a.correct).length;
+  const pct = Math.round(score/answers.length*100);
+  const msg = pct===100 ? "Excelente ojo. Sigue verificando antes de hacer clic."
+            : pct>=60  ? "Buen resultado. Repasa los casos fallados."
+                       : "Hay margen de mejora: revisa las pistas de cada caso.";
+  const r = $("result");
+  r.hidden = false;
+  r.innerHTML = `<h2>Resultado</h2>
+    <div class="score">${score} / ${answers.length}</div>
+    <p>${msg}</p>
+    <div class="review"><ul>${answers.map(a =>
+      `<li><span class="${a.correct?'tag-ok':'tag-bad'}">${a.correct?'✔':'✘'}</span> ${a.q.subject}
+       — ${a.q.phishing?'phishing':'legítimo'}</li>`).join("")}</ul></div>
+    <button class="next" id="again">Intentar de nuevo</button>`;
+  $("again").addEventListener("click", start);
+  $("again").focus();
+}
+
+$("btn-phish").addEventListener("click", ()=>answer(true));
+$("btn-legit").addEventListener("click", ()=>answer(false));
+$("next").addEventListener("click", next);
+start();
 </script>
-
 </body>
 </html>
